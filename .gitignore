@@ -31,3 +31,4 @@
 *.out
 *.app
 /.vs/cParsing_12306/v17
+/x64/Debug

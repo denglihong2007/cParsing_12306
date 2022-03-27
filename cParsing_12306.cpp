@@ -1,20 +1,95 @@
-﻿// cParsing_12306.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
-//
+﻿#include<windows.h>
+#include<string.h>
+#include<iostream>
+#include<string>
+#include<stdlib.h>
+#include<fstream>
+using namespace std;
 
-#include <iostream>
+string Lpcwstr2String(LPCWSTR lps)
+{
+	int len = WideCharToMultiByte(CP_ACP, 0, lps, -1, NULL, 0, NULL, NULL);
+	if (len <= 0)
+	{
+		return "";
+	}
+	else
+	{
+		char* dest = new char[len];
+		WideCharToMultiByte(CP_ACP, 0, lps, -1, dest, len, NULL, NULL);
+		dest[len - 1] = 0;
+		string str(dest);
+		delete[] dest;
+		return str;
+	}
+}
+
+string get_path()
+{
+
+	OPENFILENAME ofn;
+	char szFile[300];
+
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = NULL;
+	ofn.lpstrFile = (LPWSTR)szFile;
+	ofn.lpstrFile[0] = '\0';
+	LPTSTR        lpstrCustomFilter;
+	DWORD         nMaxCustFilter;
+	ofn.nFilterIndex = 1;
+	LPTSTR        lpstrFile;
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = L"文本文档\0*.TXT\0";
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+	string path_image = "";
+	if (GetOpenFileName(&ofn))
+	{
+		path_image = Lpcwstr2String(ofn.lpstrFile);
+		return path_image;
+	}
+	else
+	{
+		return "";
+	}
+}
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    string date;
+    char use_rules;
+    cout << "欢迎使用cParsing_12306，本项目使用并遵循GPLv3协议，程序作者：denglihong2007。\n";
+    cout << "请问您是否需要导入规则文件？（是的话输入Y，且文件需要为ANSI编码格式）";
+    cin >> use_rules;
+
+    if ('Y' == use_rules || 'y' == use_rules)
+    {
+		ifstream fIn(get_path());
+		if (fIn)
+		{
+			string str;
+			while (getline(fIn, str))
+			{
+				cout << str << endl;
+			}
+		}
+		else
+		{
+			cout << "打开失败。" << endl;
+		}
+		fIn.close();
+    }
+
+	while (date.size() != 8)
+	{
+		cout << "您想要爬取的日期是（注意！一次爬取只能设定一次日期，且需按照如20220401这样的格式）：";
+		cin >> date;
+		if (date.size() != 8)
+		{
+			cout << "输入有误，请重新输入。\n";
+		}
+	}
 }
-
-// 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单
-// 调试程序: F5 或调试 >“开始调试”菜单
-
-// 入门使用技巧: 
-//   1. 使用解决方案资源管理器窗口添加/管理文件
-//   2. 使用团队资源管理器窗口连接到源代码管理
-//   3. 使用输出窗口查看生成输出和其他消息
-//   4. 使用错误列表窗口查看错误
-//   5. 转到“项目”>“添加新项”以创建新的代码文件，或转到“项目”>“添加现有项”以将现有代码文件添加到项目
-//   6. 将来，若要再次打开此项目，请转到“文件”>“打开”>“项目”并选择 .sln 文件
