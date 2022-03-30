@@ -57,31 +57,60 @@ string get_path()
 	}
 }
 
+string UTF8ToGB(const char* str)
+{
+	string result;
+	WCHAR* strSrc;
+	LPSTR szRes;
+
+	//获得临时变量的大小
+	int i = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
+	strSrc = new WCHAR[i + 1];
+	MultiByteToWideChar(CP_UTF8, 0, str, -1, strSrc, i);
+
+	//获得临时变量的大小
+	i = WideCharToMultiByte(CP_ACP, 0, strSrc, -1, NULL, 0, NULL, NULL);
+	szRes = new CHAR[i + 1];
+	WideCharToMultiByte(CP_ACP, 0, strSrc, -1, szRes, i, NULL, NULL);
+
+	result = szRes;
+	delete[]strSrc;
+	delete[]szRes;
+
+	return result;
+}
+
 int main()
 {
     string date;
     char use_rules;
     cout << "欢迎使用cParsing_12306，本项目使用并遵循GPLv3协议，程序作者：denglihong2007。\n";
-    cout << "请问您是否需要导入规则文件？（是的话输入Y，且文件需要为ANSI编码格式）";
+    cout << "请问您是否需要导入规则文件？（是的话输入Y）";
     cin >> use_rules;
 
     if ('Y' == use_rules || 'y' == use_rules)
-    {
-		ifstream fIn(get_path());
-		if (fIn)
-		{
-			string str;
-			while (getline(fIn, str))
-			{
-				cout << str << endl;
-			}
-		}
-		else
+	{
+		char txt[100];
+		string r;
+		ifstream infile;
+		infile.open(get_path());
+
+		if (!infile.is_open())
 		{
 			cout << "打开失败。" << endl;
+			exit(0);
 		}
-		fIn.close();
-    }
+		
+		while (!infile.eof())
+		{
+			infile.getline(txt, 100);
+			r = UTF8ToGB(txt);
+			cout << r << endl;
+		}
+
+		infile.close();
+		getchar();
+	}
 
 	while (date.size() != 8)
 	{
