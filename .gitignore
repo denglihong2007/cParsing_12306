@@ -32,3 +32,5 @@
 *.app
 /.vs/cParsing_12306/v17
 /x64/Debug
+/enc_temp_folder/3273d6397368f5352da8f8b8fda611
+/train.csv
