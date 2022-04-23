@@ -5,6 +5,9 @@
 #include<fstream>
 #include<stdlib.h>
 #include<vector>
+#include<fstream>
+#include<codecvt>
+#include<locale>
 #pragma execution_character_set("utf-8")
 #include"requests.h"
 #include"cJSON.h"
@@ -141,7 +144,7 @@ string get_search(string train_number, string date,map<string, string> header, m
 	}
 }
 
-ofstream csv("train.csv");
+ofstream csv("qETRC.csv");
 
 int main()
 {
@@ -213,6 +216,7 @@ int main()
 		{
 			cout << "您想要爬取的日期是?（注意！一次爬取只能设定一次日期，且需按照如20220401这样的格式）";
 			cin >> date;
+			system("md ETRC");
 			num = 1;
 		}
 		if (date.size() == 8 && AllisNum(date))
@@ -222,7 +226,8 @@ int main()
 			if (train_number == "E")
 			{
 				csv.close();
-				cout << endl << "爬取结果保存在同目录的train.csv，可用Excel与记事本打开，导入到qETRC前请使用记事本将文件另存为UTF8编码。" << endl;
+				cout << endl << "qETRC.csv保存在同目录，可用Excel与记事本打开，导入到qETRC前请使用记事本将文件另存为UTF8编码。" << endl;
+				cout << endl << "ETRC车次文件保存在名为ETRC的目录，可用导入到ETRC。" << endl;
 				system("pause");
 				exit(0);
 			}
@@ -286,6 +291,9 @@ int main()
 					v_int = 0;
 					v_bool = false;
 					item = cJSON_GetObjectItem(root, "data");
+					vector<string> start_end = { "","" };
+					vector<string> e_train_number = { "","" };
+					string e_list;
 					if (item != NULL)
 					{
 						int size = cJSON_GetArraySize(item);
@@ -324,6 +332,7 @@ int main()
 									{
 										train["start_time"] = train["arrive_time"];
 									}
+									string banke = "true";
 									if (rules_list[0] != "none")
 									{
 										for (int i1 = 0; i1 < rules_list.size() ; i1++)
@@ -341,6 +350,7 @@ int main()
 												train["station_name"] = rule[1];
 												int m,h1,m1;
 												string min, hour;
+				
 												if (rule[2] != "0")
 												{
 													cout << "出发时间由" << train["start_time"] << "改为";
@@ -366,6 +376,7 @@ int main()
 														min = "0" + min;
 													}
 													train["start_time"] = hour + ":" + min;
+													banke = "false";
 													cout << train["start_time"] << "并设为通过状态。" << endl;
 													train["arrive_time"] = train["start_time"];
 												}
@@ -394,22 +405,51 @@ int main()
 														min = "0" + min;
 													}
 													train["arrive_time"] = hour + ":" + min;
+													banke = "false";
 													cout << train["arrive_time"] << "并设为通过状态。" << endl;
 													train["start_time"] = train["arrive_time"];
 												}
 											}
 										}
 									}
+									if (i2 == 0)
+									{
+										start_end.front() = train["station_name"];
+									}
+									if (i2 == size - 1)
+									{
+										start_end.back() = train["station_name"];
+									}
 									cout << "获取到" << train["station_train_code"] << "在" << train["station_name"] << "的到达时间为" << train["arrive_time"] << "，出发时间为" << train["start_time"] << "。" << endl;
 									if (csv)
 									{
 										csv << Utf8ToGbk(train["station_train_code"]) << Utf8ToGbk(",") << Utf8ToGbk(train["station_name"]) << Utf8ToGbk(",") << Utf8ToGbk(train["arrive_time"]) << Utf8ToGbk(",") << Utf8ToGbk(train["start_time"]) << Utf8ToGbk("\n");
 									}
+									if (count(e_train_number.begin(), e_train_number.end(), train["station_train_code"]) == 0)
+									{
+										string last_char = train["station_train_code"].substr(train["station_train_code"].size() - 1, 1);
+										if (last_char == "0" || last_char == "2" || last_char == "4" || last_char == "6" || last_char == "8" )
+										{
+											e_train_number.back() = train["station_train_code"];
+										}
+										else
+										{
+											e_train_number.front() = train["station_train_code"];
+										}
+									}
+									e_list += train["station_name"] + "," + train["arrive_time"] + "," + train["start_time"] + "," + banke + ",NA,0,\n";
 								}
 							}
 						}
 						cout << endl;
 					}
+					ofstream trf("ETRC\\" + train_number + ".trf");
+					if (trf)
+					{
+						trf.imbue(std::locale(trf.getloc(), new std::codecvt_utf8<wchar_t, 0x10ffff, std::little_endian>));
+						trf << "trf2," << train_number << "," << e_train_number.front() << "," << e_train_number.back() << ",NA\n" << start_end.front() << "\n" << start_end.back() << "\n" << e_list;
+					}
+					trf.close();
 				}
 				else
 				{
