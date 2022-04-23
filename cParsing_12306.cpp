@@ -222,7 +222,7 @@ int main()
 			if (train_number == "E")
 			{
 				csv.close();
-				cout << "爬取结果保存在同目录的train.csv，可用qETRC打开。" << endl;
+				cout << endl << "爬取结果保存在同目录的train.csv，可用Excel与记事本打开，导入到qETRC前请使用记事本将文件另存为UTF8编码。" << endl;
 				system("pause");
 				exit(0);
 			}
