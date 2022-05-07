@@ -32,23 +32,6 @@ string Lpcwstr2String(LPCWSTR lps)
 	}
 }
 
-std::string Utf8ToGbk(std::string src_str1) //const char *src_str
-{
-	const char* src_str = src_str1.data();
-	int len = MultiByteToWideChar(CP_UTF8, 0, src_str, -1, NULL, 0);
-	wchar_t* wszGBK = new wchar_t[len + 1];
-	memset(wszGBK, 0, len * 2 + 2);
-	MultiByteToWideChar(CP_UTF8, 0, src_str, -1, wszGBK, len);
-	len = WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, NULL, 0, NULL, NULL);
-	char* szGBK = new char[len + 1];
-	memset(szGBK, 0, len + 1);
-	WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, szGBK, len, NULL, NULL);
-	std::string strTemp(szGBK);
-	if (wszGBK) delete[] wszGBK;
-	if (szGBK) delete[] szGBK;
-	return strTemp;
-}
-
 string get_path()
 {
 
@@ -161,6 +144,7 @@ int main()
 	char txt[100];
 	ifstream infile;
 	vector<string> rules_list;
+	vector<string> trains_list;
 	
 	map<string, string> options;
 	map<string, string> header;
@@ -226,8 +210,8 @@ int main()
 			if (train_number == "E")
 			{
 				csv.close();
-				cout << endl << "qETRC.csv保存在同目录，可用Excel与记事本打开，导入到qETRC前请使用记事本将文件另存为UTF8编码。" << endl;
-				cout << endl << "ETRC车次文件保存在名为ETRC的目录，可用导入到ETRC。" << endl;
+				cout << endl << "qETRC.csv保存在同目录，可用qETRC与记事本打开，导入到EXCEL前请使用记事本将文件另存为ANSI编码。" << endl;
+				cout << "ETRC车次文件保存在名为ETRC的目录，可用导入到ETRC。" << endl;
 				system("pause");
 				exit(0);
 			}
@@ -238,222 +222,231 @@ int main()
 			}
 			else
 			{
-				cJSON* root = cJSON_Parse(search_result.c_str());
-				if (root == NULL)return 0;
-				cJSON* item = NULL;
-				char* v_str = NULL;
-				double v_double = 0.0;
-				int v_int = 0;
-				bool v_bool = false;
-				item = cJSON_GetObjectItem(root, "data");
-				if (item != NULL)
+				if (count(trains_list.begin(), trains_list.end(),train_number) == 0)
 				{
-					cJSON* obj = cJSON_GetArrayItem(item, 0);
-					cJSON* val = NULL;
-					if (obj != NULL && obj->type == cJSON_Object)
-					{	
-						val = cJSON_GetObjectItem(obj, "train_no");
-						if (val != NULL && val->type == cJSON_String)
-						{
-							search["train_no"]  = val->valuestring;
-						}
-						val = cJSON_GetObjectItem(obj, "station_train_code");
-						if (val != NULL && val->type == cJSON_String)
-						{
-							search["station_train_code"] = val->valuestring;
-						}
-					}
-				}
-				if (search["station_train_code"] == train_number)
-				{
-					cout << endl << "查询到" << search["station_train_code"] << "的代码为"  << search["train_no"] << "。" << endl;
-					string yy = date.substr(0, 4);
-					string mm = date.substr(4, 2);
-					string dd = date.substr(6, 2);
-					if (options["proxy"] != "None")
-					{
-						Response resp = Get("https://kyfw.12306.cn/otn/queryTrainInfo/query?leftTicketDTO.train_no=" + search["train_no"] + "&leftTicketDTO.train_date=" + yy + "-" + mm + "-" + dd + "&rand_code=", header, "", options);
-						train_info = resp.GetText();
-					}
-					else
-					{
-						Response resp = Get("https://kyfw.12306.cn/otn/queryTrainInfo/query?leftTicketDTO.train_no=" + search["train_no"] + "&leftTicketDTO.train_date=" + yy + "-" + mm + "-" + dd + "&rand_code=", header);
-						train_info = resp.GetText();
-					}
-					cJSON* root = cJSON_Parse(train_info.substr(84, train_info.size()-37).c_str());
-					if (root == NULL)
-					{
-						return 0;
-					}
-					item = NULL;
-					v_str = NULL;
-					v_double = 0.0;
-					v_int = 0;
-					v_bool = false;
+					trains_list.push_back(train_number);
+					cJSON* root = cJSON_Parse(search_result.c_str());
+					if (root == NULL)return 0;
+					cJSON* item = NULL;
+					char* v_str = NULL;
+					double v_double = 0.0;
+					int v_int = 0;
+					bool v_bool = false;
 					item = cJSON_GetObjectItem(root, "data");
-					vector<string> start_end = { "","" };
-					vector<string> e_train_number = { "","" };
-					string e_list;
 					if (item != NULL)
 					{
-						int size = cJSON_GetArraySize(item);
-						for (int i2 = 0; i2 < size; i2++)
+						cJSON* obj = cJSON_GetArrayItem(item, 0);
+						cJSON* val = NULL;
+						if (obj != NULL && obj->type == cJSON_Object)
 						{
-							if (item != NULL)
+							val = cJSON_GetObjectItem(obj, "train_no");
+							if (val != NULL && val->type == cJSON_String)
 							{
-								cJSON* obj = cJSON_GetArrayItem(item, i2);
-								cJSON* val = NULL;
-								if (obj != NULL && obj->type == cJSON_Object)
+								search["train_no"] = val->valuestring;
+							}
+							val = cJSON_GetObjectItem(obj, "station_train_code");
+							if (val != NULL && val->type == cJSON_String)
+							{
+								search["station_train_code"] = val->valuestring;
+							}
+						}
+					}
+					if (search["station_train_code"] == train_number)
+					{
+						cout << endl << "查询到" << search["station_train_code"] << "的代码为" << search["train_no"] << "。" << endl;
+						string yy = date.substr(0, 4);
+						string mm = date.substr(4, 2);
+						string dd = date.substr(6, 2);
+						if (options["proxy"] != "None")
+						{
+							Response resp = Get("https://kyfw.12306.cn/otn/queryTrainInfo/query?leftTicketDTO.train_no=" + search["train_no"] + "&leftTicketDTO.train_date=" + yy + "-" + mm + "-" + dd + "&rand_code=", header, "", options);
+							train_info = resp.GetText();
+						}
+						else
+						{
+							Response resp = Get("https://kyfw.12306.cn/otn/queryTrainInfo/query?leftTicketDTO.train_no=" + search["train_no"] + "&leftTicketDTO.train_date=" + yy + "-" + mm + "-" + dd + "&rand_code=", header);
+							train_info = resp.GetText();
+						}
+						cJSON* root = cJSON_Parse(train_info.substr(84, train_info.size() - 37).c_str());
+						if (root == NULL)
+						{
+							return 0;
+						}
+						item = NULL;
+						v_str = NULL;
+						v_double = 0.0;
+						v_int = 0;
+						v_bool = false;
+						item = cJSON_GetObjectItem(root, "data");
+						vector<string> start_end = { "","" };
+						vector<string> e_train_number = { "","" };
+						string e_list;
+						if (item != NULL)
+						{
+							int size = cJSON_GetArraySize(item);
+							for (int i2 = 0; i2 < size; i2++)
+							{
+								if (item != NULL)
 								{
-									val = cJSON_GetObjectItem(obj, "station_train_code");
-									if (val != NULL && val->type == cJSON_String)
+									cJSON* obj = cJSON_GetArrayItem(item, i2);
+									cJSON* val = NULL;
+									if (obj != NULL && obj->type == cJSON_Object)
 									{
-										train["station_train_code"] = val->valuestring;
-									}val = cJSON_GetObjectItem(obj, "station_name");
-									if (val != NULL && val->type == cJSON_String)
-									{
-										train["station_name"] = val->valuestring;
-									}
-									val = cJSON_GetObjectItem(obj, "arrive_time");
-									if (val != NULL && val->type == cJSON_String)
-									{
-										train["arrive_time"] = val->valuestring;
-									}
-									val = cJSON_GetObjectItem(obj, "start_time");
-									if (val != NULL && val->type == cJSON_String)
-									{
-										train["start_time"] = val->valuestring;
-									}
-									if (train["arrive_time"] == "----")
-									{
-										train["arrive_time"] = train["start_time"];
-									}
-									if (train["start_time"] == "----")
-									{
-										train["start_time"] = train["arrive_time"];
-									}
-									string banke = "true";
-									if (rules_list[0] != "none")
-									{
-										for (int i1 = 0; i1 < rules_list.size() ; i1++)
+										val = cJSON_GetObjectItem(obj, "station_train_code");
+										if (val != NULL && val->type == cJSON_String)
 										{
-											rule = split(rules_list[i1], " ");
-											if (train["station_name"] == rule[0])
+											train["station_train_code"] = val->valuestring;
+										}val = cJSON_GetObjectItem(obj, "station_name");
+										if (val != NULL && val->type == cJSON_String)
+										{
+											train["station_name"] = val->valuestring;
+										}
+										val = cJSON_GetObjectItem(obj, "arrive_time");
+										if (val != NULL && val->type == cJSON_String)
+										{
+											train["arrive_time"] = val->valuestring;
+										}
+										val = cJSON_GetObjectItem(obj, "start_time");
+										if (val != NULL && val->type == cJSON_String)
+										{
+											train["start_time"] = val->valuestring;
+										}
+										if (train["arrive_time"] == "----")
+										{
+											train["arrive_time"] = train["start_time"];
+										}
+										if (train["start_time"] == "----")
+										{
+											train["start_time"] = train["arrive_time"];
+										}
+										string banke = "true";
+										if (rules_list[0] != "none")
+										{
+											for (int i1 = 0; i1 < rules_list.size(); i1++)
 											{
-												if (rule[2] != "0" && rule[3] != "0")
+												rule = split(rules_list[i1], " ");
+												if (train["station_name"] == rule[0])
 												{
-													cout << "请检查规则文件设置是否正确。" << endl;
-													system("pause");
-													exit(0);
-												}
-												cout << "将" << train["station_name"] << "更改为" << rule[1] << "，将该站的";
-												train["station_name"] = rule[1];
-												int m,h1,m1;
-												string min, hour;
-				
-												if (rule[2] != "0")
-												{
-													cout << "出发时间由" << train["start_time"] << "改为";
-													m = atoi(train["start_time"].substr(0, 2).c_str()) * 60 + atoi(train["start_time"].substr(3, 2).c_str()) + atoi(rule[2].c_str());
-													if (m > 1440)
+													if (rule[2] != "0" && rule[3] != "0")
 													{
-														m = m - 1440;
+														cout << "请检查规则文件设置是否正确。" << endl;
+														system("pause");
+														exit(0);
 													}
-													if (m < 0)
+													cout << "将" << train["station_name"] << "更改为" << rule[1] << "，将该站的";
+													train["station_name"] = rule[1];
+													int m, h1, m1;
+													string min, hour;
+
+													if (rule[2] != "0")
 													{
-														m = m + 1440;
+														cout << "出发时间由" << train["start_time"] << "改为";
+														m = atoi(train["start_time"].substr(0, 2).c_str()) * 60 + atoi(train["start_time"].substr(3, 2).c_str()) + atoi(rule[2].c_str());
+														if (m > 1440)
+														{
+															m = m - 1440;
+														}
+														if (m < 0)
+														{
+															m = m + 1440;
+														}
+														h1 = m / 60;
+														m1 = m - h1 * 60;
+														hour = to_string(h1);
+														min = to_string(m1);
+														if (hour.size() == 1)
+														{
+															hour = "0" + hour;
+														}
+														if (min.size() == 1)
+														{
+															min = "0" + min;
+														}
+														train["start_time"] = hour + ":" + min;
+														banke = "false";
+														cout << train["start_time"] << "并设为通过状态。" << endl;
+														train["arrive_time"] = train["start_time"];
 													}
-													h1 = m / 60;
-													m1 = m - h1 * 60;
-													hour = to_string(h1);
-													min = to_string(m1);
-													if (hour.size() == 1)
+													if (rule[3] != "0")
 													{
-														hour = "0" + hour;
+														cout << "到达时间由" << train["arrive_time"] << "改为";
+														m = atoi(train["arrive_time"].substr(0, 2).c_str()) * 60 + atoi(train["arrive_time"].substr(3, 2).c_str()) + atoi(rule[3].c_str());
+														if (m > 1440)
+														{
+															m = m - 1440;
+														}
+														if (m < 0)
+														{
+															m = m + 1440;
+														}
+														h1 = m / 60;
+														m1 = m - h1 * 60;
+														hour = to_string(h1);
+														min = to_string(m1);
+														if (hour.size() == 1)
+														{
+															hour = "0" + hour;
+														}
+														if (min.size() == 1)
+														{
+															min = "0" + min;
+														}
+														train["arrive_time"] = hour + ":" + min;
+														banke = "false";
+														cout << train["arrive_time"] << "并设为通过状态。" << endl;
+														train["start_time"] = train["arrive_time"];
 													}
-													if (min.size() == 1)
-													{
-														min = "0" + min;
-													}
-													train["start_time"] = hour + ":" + min;
-													banke = "false";
-													cout << train["start_time"] << "并设为通过状态。" << endl;
-													train["arrive_time"] = train["start_time"];
-												}
-												if (rule[3] != "0")
-												{
-													cout << "到达时间由" << train["arrive_time"] << "改为";
-													m = atoi(train["arrive_time"].substr(0, 2).c_str()) * 60 + atoi(train["arrive_time"].substr(3, 2).c_str()) + atoi(rule[3].c_str());
-													if (m > 1440)
-													{
-														m = m - 1440;
-													}
-													if (m < 0)
-													{
-														m = m + 1440;
-													}
-													h1 = m / 60;
-													m1 = m - h1 * 60;
-													hour = to_string(h1);
-													min = to_string(m1);
-													if (hour.size() == 1)
-													{
-														hour = "0" + hour;
-													}
-													if (min.size() == 1)
-													{
-														min = "0" + min;
-													}
-													train["arrive_time"] = hour + ":" + min;
-													banke = "false";
-													cout << train["arrive_time"] << "并设为通过状态。" << endl;
-													train["start_time"] = train["arrive_time"];
 												}
 											}
 										}
-									}
-									if (i2 == 0)
-									{
-										start_end.front() = train["station_name"];
-									}
-									if (i2 == size - 1)
-									{
-										start_end.back() = train["station_name"];
-									}
-									cout << "获取到" << train["station_train_code"] << "在" << train["station_name"] << "的到达时间为" << train["arrive_time"] << "，出发时间为" << train["start_time"] << "。" << endl;
-									if (csv)
-									{
-										csv << Utf8ToGbk(train["station_train_code"]) << Utf8ToGbk(",") << Utf8ToGbk(train["station_name"]) << Utf8ToGbk(",") << Utf8ToGbk(train["arrive_time"]) << Utf8ToGbk(",") << Utf8ToGbk(train["start_time"]) << Utf8ToGbk("\n");
-									}
-									if (count(e_train_number.begin(), e_train_number.end(), train["station_train_code"]) == 0)
-									{
-										string last_char = train["station_train_code"].substr(train["station_train_code"].size() - 1, 1);
-										if (last_char == "0" || last_char == "2" || last_char == "4" || last_char == "6" || last_char == "8" )
+										if (i2 == 0)
 										{
-											e_train_number.back() = train["station_train_code"];
+											start_end.front() = train["station_name"];
 										}
-										else
+										if (i2 == size - 1)
 										{
-											e_train_number.front() = train["station_train_code"];
+											start_end.back() = train["station_name"];
 										}
+										cout << "获取到" << train["station_train_code"] << "在" << train["station_name"] << "的到达时间为" << train["arrive_time"] << "，出发时间为" << train["start_time"] << "。" << endl;
+										if (csv)
+										{
+											csv.imbue(std::locale(csv.getloc(), new std::codecvt_utf8<wchar_t, 0x10ffff, std::little_endian>));
+											csv << train["station_train_code"] << "," << train["station_name"] << "," << train["arrive_time"] << "," << train["start_time"] << "\n";
+										}
+										if (count(e_train_number.begin(), e_train_number.end(), train["station_train_code"]) == 0)
+										{
+											string last_char = train["station_train_code"].substr(train["station_train_code"].size() - 1, 1);
+											if (last_char == "0" || last_char == "2" || last_char == "4" || last_char == "6" || last_char == "8")
+											{
+												e_train_number.back() = train["station_train_code"];
+											}
+											else
+											{
+												e_train_number.front() = train["station_train_code"];
+											}
+										}
+										e_list += train["station_name"] + "," + train["arrive_time"] + "," + train["start_time"] + "," + banke + ",NA,0,\n";
 									}
-									e_list += train["station_name"] + "," + train["arrive_time"] + "," + train["start_time"] + "," + banke + ",NA,0,\n";
 								}
 							}
+							cout << endl;
 						}
-						cout << endl;
+						ofstream trf("ETRC\\" + train_number + ".trf");
+						if (trf)
+						{
+							trf.imbue(std::locale(trf.getloc(), new std::codecvt_utf8<wchar_t, 0x10ffff, std::little_endian>));
+							trf << "trf2," << train_number << "," << e_train_number.front() << "," << e_train_number.back() << ",NA\n" << start_end.front() << "\n" << start_end.back() << "\n" << e_list;
+						}
+						trf.close();
 					}
-					ofstream trf("ETRC\\" + train_number + ".trf");
-					if (trf)
+					else
 					{
-						trf.imbue(std::locale(trf.getloc(), new std::codecvt_utf8<wchar_t, 0x10ffff, std::little_endian>));
-						trf << "trf2," << train_number << "," << e_train_number.front() << "," << e_train_number.back() << ",NA\n" << start_end.front() << "\n" << start_end.back() << "\n" << e_list;
+						cout << "输入有误，请重新输入" << endl;
 					}
-					trf.close();
 				}
 				else
 				{
-					cout << "输入有误，请重新输入" << endl;
+					cout << "车次已存在。" << endl;
 				}
 			}
 		}
