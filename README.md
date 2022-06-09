@@ -5,9 +5,17 @@
 
 本项目使用`GPLv3`许可证，具体请查看`LICENSE`。
 
-Github链接： https://www.github.com/denglihong2007/cParsing_12306
+`Github`链接： https://www.github.com/denglihong2007/cParsing_12306
 
-Gitee链接： https://www.gitee.com/zhupaigu/cParsing_12306
+`Gitee`链接： https://www.gitee.com/zhupaigu/cParsing_12306
+
+## **项目计划：**
+
+六月更新：实现导出`.pyetdb`文件与优化爬取Ⅰ。
+
+七月更新：实现上下行车次自适应与优化爬取Ⅱ。
+
+八月更新：实现一键导出全路车次与优化爬取Ⅲ。
 
 ## **直接运行（`Only For Windows`）：**
 
@@ -17,20 +25,18 @@ Gitee链接： https://www.gitee.com/zhupaigu/cParsing_12306
 
 ●下载`Visual Studio`，打开项目文件并修改构建。
 
-## **如何使用Python版本来运行（`For All Systems`但是停止维护）：**
+## **如何使用`Python`版本来运行（`For All Systems`）：**
 
 ●前往 https://github.com/denglihong2007/Parsing_12306 或 https://gitee.com/zhupaigu/Parsing_12306 。
 
 ## **注意事项**
 
-●感谢`CDK6182CHR`的`train_graph`库和`Timetable_new`库以及本程序的最初版本，没有您就没有本项目！感谢群友“扫同打充办“的宝贵意见，因为您我们才有2.0版本！”
-
-●将车次描述文件导入到`pyETRC/qETRC`时，请务必先调整“最大跨越站数”。
+●感谢`CDK6182CHR`、群友`扫同打充办`提供宝贵灵感。
 
 ●如有建议或反馈，可以直接新建`issues`或添加`QQ:2638367181`说明。
 
 ●如果您觉得此项目帮助到您，请按下`star`，谢谢！
 
-●本程序仅在`Windows 11 and macOS and Linux`平台上测试通过，其它平台请自行测试。
+●本程序仅在`Windows 11`平台上测试通过，其它平台请自行测试。
 
 ●多规则请使用回车间隔。
