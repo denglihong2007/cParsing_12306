@@ -38,21 +38,18 @@ jobs:
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
       
-    - name: Get current time
-      uses: josStorer/get-current-time@v2
-      id: current-time
-      with:
-        format: MMMM Do YYYY, HH:mm:ss
-        utcOffset: "+08:00"
-    
+    - name: Get Commit
+      id: commit
+      uses: pr-mpt/actions-commit-hash@v1
+      
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
       with:
-        tag_name: ${{ steps.current-time.outputs.time }}
-        release_name: ${{ github.event.after }}
+        tag_name: ${{ steps.commit.outputs.short }}
+        release_name: ${{ steps.commit.outputs.short }}
         draft: false
         prerelease: true
      
