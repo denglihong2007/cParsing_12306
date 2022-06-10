@@ -56,6 +56,6 @@ jobs:
        GITHUB_TOKEN: ${{ secrets.TOKEN }}
       with:
          upload_url: ${{ steps.create_release.outputs.upload_url }}
-         asset_path: ${{ github.workspace }}/cParsing_12306.exe
+         asset_path: ${{ github.workspace }}\x64\Release\cParsing_12306.exe
          asset_name: cParsing_12306.exe
          asset_content_type: application/exe
