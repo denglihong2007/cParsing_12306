@@ -44,8 +44,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
       with:
-        tag_name: ${{ github.base_ref }}
-        release_name: ${{ github.base_ref }}
+        tag_name: ${{ github.event.after }}
+        release_name: ${{ github.event.after }}
         draft: false
         prerelease: true
      
