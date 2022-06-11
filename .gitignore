@@ -37,3 +37,5 @@
 /x64/Release
 /qETRC.csv
 /ETRC
+train.json
+train.pyetdb

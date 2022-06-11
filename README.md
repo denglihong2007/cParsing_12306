@@ -5,13 +5,15 @@
 
 本项目使用`GPLv3`许可证，具体请查看`LICENSE`。
 
+在`Github`上，每`Push`一个`Commit`就会触发`Actions`的`MSBuild`自动编译并发布为`Pre-Release`。作者认为已经达到里程碑时，就会发布`Release`。
+
 `Github`链接： https://www.github.com/denglihong2007/cParsing_12306
 
 `Gitee`链接： https://www.gitee.com/zhupaigu/cParsing_12306
 
 ## **项目计划：**
 
-六月更新：实现导出`.pyetdb`文件与优化爬取Ⅰ。
+六月更新：实现导出`.pyetdb`文件（已完成）与优化爬取Ⅰ。
 
 七月更新：实现上下行车次自适应与优化爬取Ⅱ。
 

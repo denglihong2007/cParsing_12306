@@ -127,7 +127,7 @@ string get_search(string train_number, string date,map<string, string> header, m
 	}
 }
 
-ofstream csv("qETRC.csv");
+ofstream csv("train.csv");
 
 int main()
 {
@@ -136,6 +136,8 @@ int main()
 	string train_info;
 	string train_number;
 	string search_result;
+	string timetable;
+	string pyetdb = "{\"line\": {\"name\": \"\", \"rulers\": [], \"routes\": [], \"stations\": [], \"forbid\": {\"different\": true, \"nodes\": [], \"upShow\": false, \"downShow\": false}, \"forbid2\": {\"different\": true, \"nodes\": [], \"upShow\": false, \"downShow\": false}, \"notes\": {\"author\":\"\", \"version\": \"\", \"note\": \"\"}, \"tracks\": []}, \"trains\": [";
 	string porxies;
 	string path;
 	vector<string> rule;
@@ -207,10 +209,20 @@ int main()
 		{
 			cout << "您想要爬取的车次是?（请输入始发站车次，输入E退出）";
 			cin >> train_number;
+			timetable = "\"timetable\": [";
 			if (train_number == "E")
 			{
 				csv.close();
+				pyetdb = pyetdb.substr(0, pyetdb.length() - 2) + "], \"circuits\": [], \"config\": {\"ordinate\": null, \"not_show_types\": [], \"seconds_per_pix\": 15.0, \"seconds_per_pix_y\": 8.0, \"pixes_per_km\": 4.0, \"grid_color\": \"#AAAA7F\", \"text_color\": \"#0000FF\", \"default_keche_width\": 1.5, \"default_huoche_width\": 0.75, \"default_db_file\": \"linesNew.pyetlib\", \"start_hour\": 0, \"end_hour\": 24, \"minutes_per_vertical_line\": 10.0, \"bold_line_level\": 2, \"show_line_in_station\": true, \"start_label_height\": 30, \"end_label_height\": 15, \"table_row_height\": 30, \"link_line_height\": 10, \"show_time_mark\": 1, \"max_passed_stations\": 3, \"avoid_cover\": true, \"base_label_height\": 15, \"step_label_height\": 20, \"end_label_checi\": false, \"default_colors\": {\"快速\": \"#FF0000\", \"特快\": \"#0000FF\", \"直达特快\": \"#FF00FF\", \"动车组\": \"#804000\", \"动车\": \"#804000\", \"高速\": \"#FF00BE\", \"城际\": \"#FF33CC\", \"default\": \"#008000\"}, \"margins\": {\"left_white\": 15, \"right_white\": 10, \"left\": 275, \"up\": 90, \"down\": 90, \"right\": 150, \"label_width\": 80, \"mile_label_width\": 40, \"ruler_label_width\": 80}, \"type_regex\": [[\"高速\", \"G\\\\d+\", true], [\"动车组\", \"D\\\\d+\", true], [\"城际\", \"C\\\\d+\", true], [\"直达特快\", \"Z\\\\d+\", true], [\"特快\", \"T\\\\d+\", true], [\"快速\", \"K\\\\d+\", true], [\"普快\", \"[1-5]\\\\d{3}$\", true], [\"普快\", \"[1-5]\\\\d{3}\\\\D\", true], [\"普客\", \"6\\\\d{3}$\", true], [\"普客\", \"6\\\\d{3}\\\\D\", true], [\"普客\", \"7[1-5]\\\\d{2}$\", true], [\"普客\", \"7[1-5]\\\\d{2}\\\\D\", true], [\"通勤\", \"7\\\\d{3}$\", true], [\"通勤\", \"7\\\\d{3}\\\\D\", true], [\"通勤\", \"8\\\\d{3}$\", true], [\"通勤\", \"8\\\\d{3}\\\\D\", true], [\"旅游\", \"Y\\\\d+\", true], [\"路用\", \"57\\\\d+\", true], [\"特快行包\", \"X1\\\\d{2}\", true], [\"动检\", \"DJ\\\\d+\", true], [\"客车底\", \"0[GDCZTKY]\\\\d+\", true], [\"临客\", \"L\\\\d+\", true], [\"客车底\", \"0\\\\d{4}\", true], [\"行包\", \"X\\\\d{3}\\\\D\", false], [\"行包\", \"X\\\\d{3}$\", false], [\"班列\", \"X\\\\d{4}\", false], [\"直达\", \"1\\\\d{4}\", false], [\"直货\", \"2\\\\d{4}\", false], [\"区段\", \"3\\\\d{4}\", false], [\"摘挂\", \"4[0-4]\\\\d{3}\", false], [\"小运转\", \"4[5-9]\\\\d{3}\", false], [\"单机\", \"5[0-2]\\\\d{3}\", false], [\"补机\", \"5[3-4]\\\\d{3}\", false], [\"试运转\", \"55\\\\d{3}\", false]]}, \"version\": \"\", \"markdown\": \"\"}";
+				ofstream pyetdb_f("train.pyetdb");
+				if (pyetdb_f)
+				{
+					pyetdb_f.imbue(std::locale(pyetdb_f.getloc(), new std::codecvt_utf8<wchar_t, 0x10ffff, std::little_endian>));
+					pyetdb_f << pyetdb;
+				}
+				pyetdb_f.close();
 				cout << endl << "qETRC.csv保存在同目录，可用qETRC与记事本打开，导入到EXCEL前请使用记事本将文件另存为ANSI编码。" << endl;
+				cout << "Pyetdb车次文件保存在同目录，可用导入到qETRC与pyETRC。" << endl;
 				cout << "ETRC车次文件保存在名为ETRC的目录，可用导入到ETRC。" << endl;
 				system("pause");
 				exit(0);
@@ -426,6 +438,14 @@ int main()
 											}
 										}
 										e_list += train["station_name"] + "," + train["arrive_time"] + "," + train["start_time"] + "," + banke + ",NA,0,\n";
+										if (i2 == size - 1)
+										{
+											timetable = timetable + "{\"zhanming\": \"" + train["station_name"] + "\", \"ddsj\": \"" + train["arrive_time"] + ":00\", \"cfsj\": \"" + train["start_time"] + ":00\", \"note\": \"\", \"track\": \"\", \"business\": true}], \"sfz\": \"";
+										}
+										else
+										{
+											timetable = timetable + "{\"zhanming\": \"" + train["station_name"] + "\", \"ddsj\": \"" + train["arrive_time"] + ":00\", \"cfsj\": \"" + train["start_time"] + ":00\", \"note\": \"\", \"track\": \"\", \"business\": true}, ";
+										}
 									}
 								}
 							}
@@ -438,6 +458,7 @@ int main()
 							trf << "trf2," << train_number << "," << e_train_number.front() << "," << e_train_number.back() << ",NA\n" << start_end.front() << "\n" << start_end.back() << "\n" << e_list;
 						}
 						trf.close();
+						pyetdb = pyetdb + "{\"checi\": [\"" + train_number + "\", \"" + e_train_number.front() + "\", \"" + e_train_number.back() + "\"] , \"UI\" : {}, \"type\" : \"\", " + timetable + start_end.front() + "\", \"zdz\": \"" + start_end.back() + "\", \"shown\": true, \"localFirst\" : null, \"localLast\" : null, \"autoItem\" : true, \"itemInfo\" : [] , \"passenger\" : 1, \"carriageCircuit\" : null}, ";
 					}
 					else
 					{
