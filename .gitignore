@@ -39,3 +39,4 @@
 /ETRC
 train.json
 train.pyetdb
+*.json

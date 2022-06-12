@@ -8,11 +8,14 @@
 #include<fstream>
 #include<codecvt>
 #include<locale>
+#include<stdio.h>
+#include<cpr/cpr.h>
+#include<map>
 #pragma execution_character_set("utf-8")
-#include"requests.h"
+#define true 1
+#define false 0
 #include"cJSON.h"
 using namespace std;
-using namespace requests;
 
 string Lpcwstr2String(LPCWSTR lps)
 {
@@ -112,7 +115,6 @@ int main()
 	string search_result;
 	string timetable;
 	string pyetdb = "{\"line\": {\"name\": \"\", \"rulers\": [], \"routes\": [], \"stations\": [], \"forbid\": {\"different\": true, \"nodes\": [], \"upShow\": false, \"downShow\": false}, \"forbid2\": {\"different\": true, \"nodes\": [], \"upShow\": false, \"downShow\": false}, \"notes\": {\"author\":\"\", \"version\": \"\", \"note\": \"\"}, \"tracks\": []}, \"trains\": [";
-	string porxies;
 	string path;
 	vector<string> rule;
 	char use_rules;
@@ -121,12 +123,9 @@ int main()
 	ifstream infile;
 	vector<string> rules_list;
 	vector<string> trains_list;
-	
-	map<string, string> options;
-	map<string, string> header;
+	string proxy;
 	map<string, string> search;
 	map<string, string> train;
-	header["User-Agent"] = "Mozilla/5.0 (Linux; Android 12; Redmi Note 8 Build/SP2A.220405.004; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/3235 MMWEBSDK/20220402 Mobile Safari/537.36 MMWEBID/1660 MicroMessenger/8.0.22.2140(0x28001637) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 MiniProgramEnv/android";
 
     cout << "欢迎使用cParsing_12306，本项目使用并遵循GPLv3协议，程序作者：denglihong2007。\n";
     cout << "请问您是否需要导入规则文件（UTF-8编码，格式为A B 1 0，意为将A站改为B站且把到达时间推迟一分钟设为通过状态）？（是的话输入Y，否则输入其它键）";
@@ -160,13 +159,13 @@ int main()
 
 	if ('Y' == use_porxies || 'y' == use_porxies)
 	{
-		cout << "请输入代理http地址。";
-		cin >> porxies;
-		options["proxy"] = "https=" + porxies;
+		cout << "请输入代理http地址。http://";
+		cin >> proxy;
+		proxy = "http://" + proxy;
 	}
 	else
 	{
-		options["proxy"] = "None";
+		proxy = "None";
 	}
 
 	int num = 0;
@@ -205,15 +204,20 @@ int main()
 			{
 				if (count(trains_list.begin(), trains_list.end(),train_number) == 0)
 				{
-					if (options["proxy"] != "None")
+					if (proxy != "None")
 					{
-						Response resp = Get("https://wifi.12306.cn/wifiapps/ticket/api/stoptime/queryByTrainCode?trainCode=" + train_number + "&trainDate=" + date + "&getBigScreen=true", header, "", options);
-						train_info = resp.GetText();
+						cpr::Response r = cpr::Get(cpr::Url{ "https://wifi.12306.cn/wifiapps/ticket/api/stoptime/queryByTrainCode?trainCode=" + train_number + "&trainDate=" + date + "&getBigScreen=true" },
+							cpr::Header{ {"User-Agent", "Mozilla/5.0 (Linux; Android 12; Redmi Note 8 Build/SP2A.220405.004; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/3235 MMWEBSDK/20220402 Mobile Safari/537.36 MMWEBID/1660 MicroMessenger/8.0.22.2140(0x28001637) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 MiniProgramEnv/android"} },
+							cpr::Timeout{ 7000 },
+							cpr::Proxies{ {"https", proxy} });
+						train_info = r.text;
 					}
 					else
 					{
-						Response resp = Get("https://wifi.12306.cn/wifiapps/ticket/api/stoptime/queryByTrainCode?trainCode=" + train_number + "&trainDate=" + date + "&getBigScreen=true", header);
-						train_info = resp.GetText();
+						cpr::Response r = cpr::Get(cpr::Url{ "https://wifi.12306.cn/wifiapps/ticket/api/stoptime/queryByTrainCode?trainCode=" + train_number + "&trainDate=" + date + "&getBigScreen=true" },
+							cpr::Header{ {"User-Agent", "Mozilla/5.0 (Linux; Android 12; Redmi Note 8 Build/SP2A.220405.004; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.99 XWEB/3235 MMWEBSDK/20220402 Mobile Safari/537.36 MMWEBID/1660 MicroMessenger/8.0.22.2140(0x28001637) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 MiniProgramEnv/android"} },
+							cpr::Timeout{ 7000 });
+						train_info = r.text;
 					}
 					if (train_info.size() == 111)
 					{
