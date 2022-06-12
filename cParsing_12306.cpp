@@ -9,7 +9,7 @@
 #include<codecvt>
 #include<locale>
 #include<stdio.h>
-#include<./cpr/cpr.h>
+#include<cpr/cpr.h>
 #include<map>
 #pragma execution_character_set("utf-8")
 #define true 1
