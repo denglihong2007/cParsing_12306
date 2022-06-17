@@ -13,19 +13,21 @@
 #include "cpr/cookies.h"
 #include "cpr/cprtypes.h"
 #include "cpr/curlholder.h"
-#include "cpr/digest.h"
+#include "cpr/accept_encoding.h"
 #include "cpr/http_version.h"
 #include "cpr/interface.h"
 #include "cpr/limit_rate.h"
+#include "cpr/local_port.h"
+#include "cpr/local_port_range.h"
 #include "cpr/low_speed.h"
 #include "cpr/multipart.h"
-#include "cpr/ntlm.h"
 #include "cpr/parameters.h"
 #include "cpr/payload.h"
 #include "cpr/proxies.h"
 #include "cpr/proxyauth.h"
-#include "cpr/redirect.h"
 #include "cpr/range.h"
+#include "cpr/redirect.h"
+#include "cpr/reserve_size.h"
 #include "cpr/response.h"
 #include "cpr/ssl_options.h"
 #include "cpr/timeout.h"
@@ -34,6 +36,8 @@
 #include "cpr/verbose.h"
 
 namespace cpr {
+
+class Interceptor;
 
 class Session {
   public:
@@ -54,7 +58,6 @@ class Session {
     void SetTimeout(const Timeout& timeout);
     void SetConnectTimeout(const ConnectTimeout& timeout);
     void SetAuth(const Authentication& auth);
-    void SetDigest(const Digest& auth);
     void SetUserAgent(const UserAgent& ua);
     void SetPayload(Payload&& payload);
     void SetPayload(const Payload& payload);
@@ -64,7 +67,6 @@ class Session {
     void SetProxyAuth(const ProxyAuthentication& proxy_auth);
     void SetMultipart(Multipart&& multipart);
     void SetMultipart(const Multipart& multipart);
-    void SetNTLM(const NTLM& auth);
     void SetRedirect(const Redirect& redirect);
     void SetCookies(const Cookies& cookies);
     void SetBody(Body&& body);
@@ -80,8 +82,14 @@ class Session {
     void SetDebugCallback(const DebugCallback& debug);
     void SetVerbose(const Verbose& verbose);
     void SetInterface(const Interface& iface);
+    void SetLocalPort(const LocalPort& local_port);
+    void SetLocalPortRange(const LocalPortRange& local_port_range);
     void SetHttpVersion(const HttpVersion& version);
     void SetRange(const Range& range);
+    void SetMultiRange(const MultiRange& multi_range);
+    void SetReserveSize(const ReserveSize& reserve_size);
+    void SetAcceptEncoding(const AcceptEncoding& accept_encoding);
+    void SetAcceptEncoding(AcceptEncoding&& accept_encoding);
 
     // Used in templated functions
     void SetOption(const Url& url);
@@ -96,7 +104,6 @@ class Session {
 #if LIBCURL_VERSION_NUM >= 0x073D00
     void SetOption(const Bearer& auth);
 #endif
-    void SetOption(const Digest& auth);
     void SetOption(const UserAgent& ua);
     void SetOption(Payload&& payload);
     void SetOption(const Payload& payload);
@@ -107,7 +114,6 @@ class Session {
     void SetOption(const ProxyAuthentication& proxy_auth);
     void SetOption(Multipart&& multipart);
     void SetOption(const Multipart& multipart);
-    void SetOption(const NTLM& auth);
     void SetOption(const Redirect& redirect);
     void SetOption(const Cookies& cookies);
     void SetOption(Body&& body);
@@ -123,8 +129,14 @@ class Session {
     void SetOption(const UnixSocket& unix_socket);
     void SetOption(const SslOptions& options);
     void SetOption(const Interface& iface);
+    void SetOption(const LocalPort& local_port);
+    void SetOption(const LocalPortRange& local_port_range);
     void SetOption(const HttpVersion& version);
     void SetOption(const Range& range);
+    void SetOption(const MultiRange& multi_range);
+    void SetOption(const ReserveSize& reserve_size);
+    void SetOption(const AcceptEncoding& accept_encoding);
+    void SetOption(AcceptEncoding&& accept_encoding);
 
     cpr_off_t GetDownloadFileLength();
     /**
@@ -149,6 +161,7 @@ class Session {
     Response Put();
 
     std::shared_ptr<CurlHolder> GetCurlHolder();
+    std::string GetFullRequestUrl();
 
     void PrepareDelete();
     void PrepareGet();
@@ -159,7 +172,14 @@ class Session {
     void PreparePut();
     Response Complete(CURLcode curl_error);
 
+    void AddInterceptor(const std::shared_ptr<Interceptor>& pinterceptor);
+
   private:
+    // Interceptors should be able to call the private procceed() function
+    friend Interceptor;
+
+    Response proceed();
+
     class Impl;
     std::unique_ptr<Impl> pimpl_;
 };
