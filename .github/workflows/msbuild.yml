@@ -54,7 +54,7 @@ jobs:
         tag_name: ${{ steps.commit.outputs.short }}
         release_name: ${{ steps.commit.outputs.short }}
         draft: false
-        prerelease: true
+        prerelease: false
 
     - name: Upload Release Asset
       id: upload-release-asset
