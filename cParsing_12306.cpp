@@ -127,7 +127,7 @@ int main()
 	map<string, string> search;
 	map<string, string> train;
 
-	cout << "欢迎使用cParsing_12306，本项目使用并遵循GPLv3协议，程序作者：denglihong2007。\n";
+	cout << "欢迎使用cParsing_12306，本项目使用并遵循GPLv3协议，程序作者：denglihong2007。";
     cout << "请问您是否需要导入规则文件（UTF-8编码，格式为A B 1 0，意为将A站改为B站且把到达时间推迟一分钟设为通过状态）？（是的话输入Y，否则输入其它键）";
     cin >> use_rules;
 
@@ -390,7 +390,6 @@ int main()
 									}
 								}
 							}
-							cout << endl;
 						}
 						ofstream trf("ETRC\\" + train_number + ".trf");
 						if (trf)
