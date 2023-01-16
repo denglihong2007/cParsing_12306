@@ -7,19 +7,9 @@
 
 `Github`链接： https://www.github.com/denglihong2007/cParsing_12306
 
-`Gitee`链接： https://www.gitee.com/zhupaigu/cParsing_12306
-
-## **项目计划：**
-
-六月更新：实现导出`.pyetdb`文件（已完成）与优化爬取Ⅰ。
-
-七月更新：实现上下行车次自适应与优化爬取Ⅱ。
-
-八月更新：实现一键导出全路车次与优化爬取Ⅲ。
-
 ## **直接运行（`Only For Windows`）：**
 
-●前往 https://github.com/denglihong2007/cParsing_12306/releases 或 https://gitee.com/zhupaigu/cParsing_12306/releases 下载`exe`文件，直接解压运行即可。
+●前往 https://github.com/denglihong2007/cParsing_12306/releases 下载`zip`文件，直接解压运行即可。
 
 ## **如何使用源码来运行（`Only For Windows`）：**
 
