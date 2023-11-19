@@ -1,14 +1,14 @@
 ﻿using Newtonsoft.Json.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
-class cParsing_12306
+class Parsing_12306
 {
     public static Dictionary<string, string> stationTelPairs=[];
     public static Dictionary<string, string> trainNoPairs = [];
+    public static Dictionary<string, string> trainNoStartEndPairs = [];
     public static List<string[]> data = [];
     public static string date;
     public static string station;
-    public static async Task<Dictionary<string, string>> getStationTelPairs()
+    public static async Task<Dictionary<string, string>> GetStationTelPairs()
     {
         Dictionary<string, string> stationTelPairs_ = [];
         HttpClient client = new();
@@ -27,7 +27,7 @@ class cParsing_12306
         return stationTelPairs_;
     }
     #region cParsing_Train
-    public static async Task getTrains(int index_)
+    public static async Task GetTrains(int index_)
     {
         int max = 250 * (index_ + 1);
         if(max> stationTelPairs.Values.Count)
@@ -37,7 +37,7 @@ class cParsing_12306
         Console.WriteLine(max);
         for (int i = 250 * index_; i < max; i++)
         {
-            Console.WriteLine("Thread "+index_+" Progress:" + 100*(i - 250 * index_)/ (max- 250 * index_) + "%");
+            Console.WriteLine("Thread A "+index_+" Progress:" + 100*(i - 250 * index_)/ (max- 250 * index_) + "%");
             HttpClient client = new();
             client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0");
             string url = "https://kyfw.12306.cn/otn/leftTicketPrice/query?leftTicketDTO.train_date=" + date + "&leftTicketDTO.from_station=" + stationTelPairs[station] + "&leftTicketDTO.to_station=" + stationTelPairs.Values.ToArray()[i] + "&leftTicketDTO.ticket_type=1&randCode=stzh";
@@ -52,13 +52,17 @@ class cParsing_12306
                     if (!trainNoPairs.ContainsKey(trainNo))
                     {
                         string stationTrainCode = item["queryLeftNewDTO"]["station_train_code"].ToString();
+                        string start_station_name = item["queryLeftNewDTO"]["start_station_name"].ToString();
+                        string end_station_name = item["queryLeftNewDTO"]["end_station_name"].ToString();
                         trainNoPairs[stationTrainCode] = trainNo;
+                        trainNoStartEndPairs[trainNo] = start_station_name+","+ end_station_name;
                     }
                 }
             }
         }
+        Console.WriteLine("Thread A " + index_ + " has finished");
     }
-    public static async Task cParsing_Train() 
+    public static async Task Parsing_Train() 
     {
         if (stationTelPairs.ContainsKey(station))
         {
@@ -66,7 +70,7 @@ class cParsing_12306
             for (int i = 0; i < 14; i++)
             {
                 int currentIndex = i;
-                Task task = Task.Run(() => getTrains(currentIndex));
+                Task task = Task.Run(() => GetTrains(currentIndex));
                 tasks.Add(task);
             }
             await Task.WhenAll(tasks);
@@ -74,19 +78,26 @@ class cParsing_12306
     }
     #endregion
     #region cParsing_TimeTable
-    public static async Task cParsing_TimeTable()
+    public static async Task GetTimeTable(int index_)
     {
-        Parallel.ForEach(trainNoPairs.Values,async (item1) =>
+        int max = 50 * (index_ + 1);
+        if (max > trainNoPairs.Values.Count)
         {
+            max = trainNoPairs.Values.Count;
+        }
+        Console.WriteLine(max);
+        for (int i = 50 * index_; i < max; i++)
+        {
+            Console.WriteLine("Thread B " + index_ + " Progress:" + 100 * (i - 50 * index_) / (max - 50 * index_) + "%");
             HttpClient client = new();
             client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0");
-            string url = "https://kyfw.12306.cn/otn/queryTrainInfo/query?leftTicketDTO.train_no="+item1+"&leftTicketDTO.train_date=" + date + "&rand_code=";
+            string url = "https://kyfw.12306.cn/otn/queryTrainInfo/query?leftTicketDTO.train_no=" + trainNoPairs.Values.ToList()[i] + "&leftTicketDTO.train_date=" + date + "&rand_code=";
             HttpResponseMessage response = await client.GetAsync(url);
             if (response.IsSuccessStatusCode)
             {
                 JObject jsonObject = JObject.Parse(await response.Content.ReadAsStringAsync());
                 JArray dataArray = (JArray)jsonObject["data"]["data"];
-                foreach (JObject item in dataArray)
+                foreach (JObject item in dataArray.Cast<JObject>())
                 {
                     string stationName = item["station_name"].ToString();
                     if (stationName == station)
@@ -102,12 +113,25 @@ class cParsing_12306
                         {
                             startTime = arriveTime;
                         }
-                        data.Add([station_train_code, arriveTime, startTime]);
+                        data.Add([station_train_code, arriveTime, startTime, trainNoStartEndPairs[trainNoPairs.Values.ToList()[i]]]);
                         break;
                     }
                 }
             }
-        });
+        }
+        Console.WriteLine("Thread B " + index_ + " has finished");
+    }
+    public static async Task Parsing_TimeTable()
+    {
+        List<Task> tasks = [];
+        int number=trainNoPairs.Count/50+1;
+        for (int i = 0; i < number+1; i++)
+        {
+            int currentIndex = i;
+            Task task = Task.Run(() => GetTimeTable(currentIndex));
+            tasks.Add(task);
+        }
+        await Task.WhenAll(tasks);
     }
     #endregion
 
@@ -115,21 +139,20 @@ class cParsing_12306
     {
         try
         {
-            stationTelPairs = getStationTelPairs().Result;
+            stationTelPairs = GetStationTelPairs().Result;
 #if DEBUG
-            args = ["广元", "2023-11-21"];
+            args = ["成都西", "2023-11-21"];
 #endif
             date = args[1];
             station = args[0];
-            await cParsing_Train();
-            await cParsing_TimeTable();
+            await Parsing_Train();
+            await Parsing_TimeTable();
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            using StreamWriter sw = new(".\\error.txt");
+            sw.WriteLine(string.Join(",", e.Message));
         }
-        Console.WriteLine("Press any key to create CSV file.");
-        Console.ReadLine();
         using (StreamWriter sw = new(".\\result.csv"))
         {
             foreach (string[] row in data)
@@ -137,7 +160,5 @@ class cParsing_12306
                 sw.WriteLine(string.Join(",", row));
             }
         }
-
-        Console.WriteLine("CSV file created successfully.");
     }
 }
